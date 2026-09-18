@@ -1,0 +1,577 @@
+.terrakit-root {
+    flex-grow: 1;
+    background-color: #1f2329;
+}
+
+.terrakit-toolbar {
+    height: 34px;
+    background-color: #2a2f38;
+    border-bottom-width: 1px;
+    border-bottom-color: #3a404b;
+}
+
+.terrakit-toolbar-title {
+    -unity-font-style: bold;
+    font-size: 14px;
+    margin-left: 8px;
+    margin-right: 16px;
+    color: #d6dde8;
+}
+
+.terrakit-graph-field {
+    width: 320px;
+    margin-right: 8px;
+}
+
+.terrakit-save-state {
+    min-width: 102px;
+    margin-right: 8px;
+    align-self: center;
+    -unity-font-style: bold;
+    font-size: 10px;
+    color: #68c57b;
+}
+
+.terrakit-body-split {
+    flex-grow: 1;
+}
+
+.terrakit-main {
+    flex-grow: 1;
+    flex-direction: row;
+}
+
+.terrakit-graph-container {
+    flex-grow: 1;
+    position: relative;
+}
+
+.terrakit-navigation-hint {
+    position: absolute;
+    left: 12px;
+    bottom: 10px;
+    width: 330px;
+    padding-left: 11px;
+    padding-right: 11px;
+    padding-top: 9px;
+    padding-bottom: 9px;
+    background-color: rgba(20, 24, 29, 0.95);
+    border-top-width: 1px;
+    border-right-width: 1px;
+    border-bottom-width: 1px;
+    border-left-width: 1px;
+    border-top-color: #3d4652;
+    border-right-color: #3d4652;
+    border-bottom-color: #3d4652;
+    border-left-color: #3d4652;
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+    border-bottom-left-radius: 4px;
+    border-bottom-right-radius: 4px;
+}
+
+.terrakit-navigation-heading {
+    margin-bottom: 6px;
+    -unity-font-style: bold;
+    font-size: 10px;
+    letter-spacing: 0.5px;
+    color: #7fc0e8;
+}
+
+.terrakit-navigation-row {
+    min-height: 19px;
+    flex-direction: row;
+    align-items: center;
+}
+
+.terrakit-navigation-action {
+    width: 92px;
+    -unity-font-style: bold;
+    font-size: 10px;
+    color: #d5dce6;
+}
+
+.terrakit-navigation-control {
+    flex-grow: 1;
+    font-size: 10px;
+    color: #aeb8c6;
+}
+
+.terrakit-graph-view {
+    flex-grow: 1;
+}
+
+.terrakit-inspector {
+    min-width: 260px;
+    background-color: #252a32;
+    border-left-width: 1px;
+    border-left-color: #3a404b;
+    padding-left: 10px;
+    padding-right: 10px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+}
+
+.terrakit-inspector-text {
+    white-space: normal;
+    margin-bottom: 3px;
+    color: #b9c2cf;
+}
+
+.terrakit-status-panel {
+    min-height: 120px;
+    background-color: #111418;
+    border-top-width: 1px;
+    border-top-color: #3a404b;
+}
+
+.terrakit-status-header {
+    height: 32px;
+    min-height: 32px;
+    flex-direction: row;
+    align-items: center;
+    padding-left: 10px;
+    padding-right: 8px;
+    background-color: #181c22;
+    border-bottom-width: 1px;
+    border-bottom-color: #303640;
+}
+
+.terrakit-status-icon {
+    width: 22px;
+    -unity-font-style: bold;
+    font-size: 14px;
+}
+
+.terrakit-status-type {
+    width: 78px;
+    -unity-font-style: bold;
+    font-size: 11px;
+}
+
+.terrakit-status-time {
+    flex-grow: 1;
+    font-size: 11px;
+    color: #929baa;
+}
+
+.terrakit-status-clear {
+    width: 58px;
+    height: 22px;
+}
+
+.terrakit-status-scroll {
+    flex-grow: 1;
+    padding-left: 10px;
+    padding-right: 10px;
+    padding-top: 7px;
+    padding-bottom: 7px;
+}
+
+.terrakit-status-summary {
+    -unity-font-style: bold;
+    white-space: normal;
+    color: #d6dde8;
+    margin-bottom: 4px;
+}
+
+.terrakit-status-details {
+    white-space: normal;
+    color: #b9c2cf;
+    padding-bottom: 6px;
+}
+
+.terrakit-status-error-row {
+    min-height: 24px;
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: 3px;
+}
+
+.terrakit-status-detail-message {
+    flex-grow: 1;
+    white-space: normal;
+    color: #b9c2cf;
+}
+
+.terrakit-compile-summary {
+    margin-top: 4px;
+    margin-bottom: 8px;
+}
+
+.terrakit-compile-section-heading {
+    margin-top: 3px;
+    margin-bottom: 4px;
+    -unity-font-style: bold;
+    color: #d6dde8;
+}
+
+.terrakit-compile-metrics {
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+
+.terrakit-compile-metric {
+    width: 124px;
+    min-height: 38px;
+    margin-right: 6px;
+    margin-bottom: 5px;
+    padding-left: 8px;
+    padding-right: 8px;
+    padding-top: 4px;
+    padding-bottom: 4px;
+    background-color: #1b2027;
+    border-left-width: 2px;
+    border-left-color: #68c57b;
+}
+
+.terrakit-compile-metric-value {
+    -unity-font-style: bold;
+    font-size: 13px;
+    color: #dce4ef;
+}
+
+.terrakit-compile-metric-name {
+    font-size: 10px;
+    color: #929baa;
+}
+
+.terrakit-status-go-to {
+    width: 58px;
+    height: 20px;
+    margin-left: 8px;
+    flex-shrink: 0;
+}
+
+.terrakit-status-info .terrakit-status-icon {
+    color: #65a9e8;
+}
+
+.terrakit-status-info .terrakit-status-type {
+    color: #65a9e8;
+}
+
+.terrakit-status-success .terrakit-status-icon {
+    color: #68c57b;
+}
+
+.terrakit-status-success .terrakit-status-type {
+    color: #68c57b;
+}
+
+.terrakit-status-warning .terrakit-status-icon {
+    color: #e0b85c;
+}
+
+.terrakit-status-warning .terrakit-status-type {
+    color: #e0b85c;
+}
+
+.terrakit-status-error .terrakit-status-icon {
+    color: #e36b6b;
+}
+
+.terrakit-status-error .terrakit-status-type {
+    color: #e36b6b;
+}
+
+#InspectorTitle {
+    -unity-font-style: bold;
+    font-size: 15px;
+    margin-bottom: 8px;
+    color: #ffffff;
+}
+
+#InspectorSection {
+    -unity-font-style: bold;
+    margin-top: 14px;
+    margin-bottom: 6px;
+    color: #d6dde8;
+}
+
+.terrakit-parameter-field {
+    margin-bottom: 12px;
+    padding-left: 5px;
+    border-left-width: 2px;
+    border-left-color: rgba(0, 0, 0, 0);
+}
+
+.terrakit-parameter-input {
+    margin-left: 0;
+    margin-right: 0;
+}
+
+.terrakit-parameter-description {
+    margin-top: 3px;
+    margin-left: 3px;
+    margin-right: 3px;
+    white-space: normal;
+    font-size: 11px;
+    color: #aeb8c6;
+}
+
+.terrakit-parameter-metadata-row {
+    min-height: 23px;
+    flex-direction: row;
+    align-items: center;
+    margin-top: 3px;
+    margin-left: 3px;
+    min-width: 0;
+}
+
+.terrakit-parameter-value-hint {
+    flex-grow: 1;
+    flex-shrink: 1;
+    flex-basis: 0;
+    min-width: 0;
+    white-space: normal;
+    font-size: 10px;
+    color: #7f8998;
+}
+
+.terrakit-parameter-reset {
+    width: 58px;
+    min-width: 58px;
+    height: 20px;
+    margin-left: 6px;
+    flex-shrink: 0;
+}
+
+.terrakit-parameter-error {
+    display: none;
+    margin-top: 3px;
+    margin-left: 3px;
+    margin-right: 3px;
+    white-space: normal;
+    font-size: 11px;
+    color: #ef8585;
+}
+
+.terrakit-parameter-invalid {
+    border-left-color: #d85f5f;
+}
+
+.terrakit-parameter-invalid .unity-base-field__input {
+    border-top-width: 1px;
+    border-right-width: 1px;
+    border-bottom-width: 1px;
+    border-left-width: 1px;
+    border-top-color: #d85f5f;
+    border-right-color: #d85f5f;
+    border-bottom-color: #d85f5f;
+    border-left-color: #d85f5f;
+}
+
+.terrakit-node {
+    width: 260px;
+    min-width: 220px;
+    min-height: 120px;
+    border-top-width: 2px;
+    border-top-color: #7587a6;
+}
+
+.terrakit-node > #node-border {
+    background-color: #20252c;
+    border-top-width: 2px;
+    border-right-width: 1px;
+    border-bottom-width: 1px;
+    border-left-width: 1px;
+    border-right-color: #434b57;
+    border-bottom-color: #343b45;
+    border-left-color: #434b57;
+    border-top-left-radius: 5px;
+    border-top-right-radius: 5px;
+    border-bottom-left-radius: 5px;
+    border-bottom-right-radius: 5px;
+}
+
+.terrakit-node.selected > #node-border {
+    border-right-color: #62b8e8;
+    border-bottom-color: #62b8e8;
+    border-left-color: #62b8e8;
+}
+
+.terrakit-node-error > #node-border,
+.terrakit-node-error.selected > #node-border {
+    border-top-width: 2px;
+    border-right-width: 2px;
+    border-bottom-width: 2px;
+    border-left-width: 2px;
+    border-top-color: #d96868;
+    border-right-color: #d96868;
+    border-bottom-color: #d96868;
+    border-left-color: #d96868;
+}
+
+.terrakit-node-title,
+.terrakit-node > #node-border > #title {
+    min-height: 34px;
+    padding-left: 8px;
+    padding-right: 6px;
+    background-color: #303640;
+    border-bottom-width: 1px;
+    border-bottom-color: #414956;
+}
+
+.terrakit-node #title-label {
+    -unity-font-style: bold;
+    font-size: 12px;
+    color: #f1f4f8;
+}
+
+.terrakit-node-category {
+    align-self: center;
+    padding-left: 6px;
+    padding-right: 6px;
+    padding-top: 2px;
+    padding-bottom: 2px;
+    margin-left: 5px;
+    background-color: #242a32;
+    border-top-left-radius: 6px;
+    border-top-right-radius: 6px;
+    border-bottom-left-radius: 6px;
+    border-bottom-right-radius: 6px;
+    font-size: 8px;
+    color: #aeb8c6;
+}
+
+.terrakit-node-error-badge {
+    display: none;
+    align-self: center;
+    margin-left: 5px;
+    padding-left: 6px;
+    padding-right: 6px;
+    padding-top: 2px;
+    padding-bottom: 2px;
+    background-color: #8e3f43;
+    border-top-left-radius: 6px;
+    border-top-right-radius: 6px;
+    border-bottom-left-radius: 6px;
+    border-bottom-right-radius: 6px;
+    -unity-font-style: bold;
+    font-size: 9px;
+    color: #ffffff;
+}
+
+.terrakit-node > #node-border > #contents {
+    background-color: #20252c;
+}
+
+.terrakit-node > #node-border > #contents > #top {
+    padding-top: 6px;
+    padding-bottom: 6px;
+}
+
+.terrakit-node-inputs,
+.terrakit-node-outputs {
+    min-width: 108px;
+}
+
+.terrakit-port {
+    min-height: 24px;
+    color: #c9d1dc;
+    font-size: 10px;
+}
+
+.terrakit-port #type {
+    color: #c9d1dc;
+}
+
+.terrakit-port-input #type {
+    -unity-text-align: middle-left;
+}
+
+.terrakit-port-output #type {
+    -unity-text-align: middle-right;
+}
+
+.terrakit-port-heightmap #connector {
+    background-color: #d49a55;
+    border-color: #edbd7e;
+}
+
+.terrakit-port-mesh #connector {
+    background-color: #d2c45e;
+    border-color: #e8dc86;
+}
+
+.terrakit-node-extension {
+    padding-left: 9px;
+    padding-right: 9px;
+    padding-top: 7px;
+    padding-bottom: 8px;
+    background-color: #1b2026;
+    border-top-width: 1px;
+    border-top-color: #343b45;
+}
+
+.terrakit-node-parameter-heading {
+    margin-bottom: 4px;
+    -unity-font-style: bold;
+    font-size: 8px;
+    letter-spacing: 0.5px;
+    color: #7f8b9b;
+}
+
+.terrakit-node-parameter-row {
+    min-height: 18px;
+    flex-direction: row;
+    align-items: center;
+}
+
+.terrakit-node-parameter-name {
+    width: 55%;
+    font-size: 10px;
+    color: #aeb8c6;
+}
+
+.terrakit-node-parameter-value {
+    flex-grow: 1;
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    -unity-text-overflow-position: end;
+    -unity-text-align: middle-right;
+    -unity-font-style: bold;
+    font-size: 10px;
+    color: #e1e7ef;
+}
+
+.terrakit-node-resizer {
+    width: 14px;
+    height: 14px;
+    right: 1px;
+    bottom: 1px;
+    opacity: 0.65;
+}
+
+.terrakit-node-resizer:hover {
+    opacity: 1;
+}
+
+.terrakit-node-height {
+    border-top-color: #b88746;
+}
+
+.terrakit-node-height > #node-border {
+    border-top-color: #b88746;
+}
+
+.terrakit-node-mesh {
+    border-top-color: #d6c55e;
+}
+
+.terrakit-node-mesh > #node-border {
+    border-top-color: #d6c55e;
+}
+
+.terrakit-parameter-summary {
+    white-space: normal;
+    font-size: 11px;
+    color: #cfd6e2;
+    margin-top: 6px;
+    margin-left: 4px;
+    margin-right: 4px;
+    margin-bottom: 6px;
+}
