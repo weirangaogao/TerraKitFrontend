@@ -175,7 +175,11 @@ namespace TerraKit.Editor
             };
             toolbar.Add(_generatorButton);
 
-            toolbar.Add(new Button(ShowHelp) { text = "Help" });
+            toolbar.Add(new Button(ShowHelp)
+            {
+                text = "Help",
+                tooltip = "Show quick start instructions in the Info panel."
+            });
 
             rootVisualElement.Add(toolbar);
         }
@@ -200,7 +204,7 @@ namespace TerraKit.Editor
             };
             main.AddToClassList("terrakit-main");
 
-            _graphView = new TerraKitGraphView();
+            _graphView = new TerraKitGraphView(this);
             _graphView.StretchToParentSize();
             _graphView.NodeSelected += HandleNodeSelected;
             _graphView.GraphChanged += HandleGraphChanged;
@@ -208,7 +212,6 @@ namespace TerraKit.Editor
             var graphContainer = new VisualElement();
             graphContainer.AddToClassList("terrakit-graph-container");
             graphContainer.Add(_graphView);
-
             graphContainer.Add(BuildNavigationHint());
 
             _inspector = new ScrollView();
@@ -224,9 +227,20 @@ namespace TerraKit.Editor
 
         private static VisualElement BuildNavigationHint()
         {
+            var overlay = new VisualElement { pickingMode = PickingMode.Ignore };
+            overlay.style.position = Position.Absolute;
+            overlay.style.left = 12;
+            overlay.style.bottom = 10;
+            overlay.style.alignItems = Align.FlexStart;
+
             var panel = new VisualElement();
             panel.AddToClassList("terrakit-navigation-hint");
-            panel.pickingMode = PickingMode.Ignore;
+            // Keep the shortcut panel above the button so the button never moves when toggled.
+            panel.style.position = Position.Relative;
+            panel.style.left = 0;
+            panel.style.bottom = 0;
+            panel.style.marginBottom = 6;
+            panel.style.display = DisplayStyle.None;
 
             var heading = new Label("CANVAS CONTROLS");
             heading.AddToClassList("terrakit-navigation-heading");
@@ -244,7 +258,50 @@ namespace TerraKit.Editor
             AddNavigationHintRow(panel, "Undo", mac ? "Cmd + Z" : "Ctrl + Z");
             AddNavigationHintRow(panel, "Redo", mac ? "Cmd + Shift + Z" : "Ctrl + Y");
 
-            return panel;
+            bool expanded = false;
+            var toggle = new Button { tooltip = "Show canvas controls" };
+            toggle.style.width = 96;
+            toggle.style.height = 24;
+            toggle.style.flexDirection = FlexDirection.Row;
+            toggle.style.alignItems = Align.Center;
+            toggle.style.justifyContent = Justify.Center;
+            toggle.style.marginLeft = 0;
+            toggle.style.marginRight = 0;
+            toggle.style.marginTop = 0;
+            toggle.style.marginBottom = 0;
+
+            // Draw the circle explicitly so the icon does not depend on a special font glyph.
+            var helpIcon = new Label("?") { pickingMode = PickingMode.Ignore };
+            helpIcon.style.width = helpIcon.style.height = 14;
+            helpIcon.style.flexShrink = 0;
+            helpIcon.style.marginLeft = helpIcon.style.marginTop = helpIcon.style.marginBottom = 0;
+            helpIcon.style.marginRight = 5;
+            helpIcon.style.paddingLeft = helpIcon.style.paddingRight = 0;
+            helpIcon.style.paddingTop = helpIcon.style.paddingBottom = 0;
+            helpIcon.style.fontSize = 11;
+            helpIcon.style.unityTextAlign = TextAnchor.MiddleCenter;
+            helpIcon.style.borderTopWidth = helpIcon.style.borderBottomWidth = 1;
+            helpIcon.style.borderLeftWidth = helpIcon.style.borderRightWidth = 1;
+            helpIcon.style.borderTopLeftRadius = helpIcon.style.borderTopRightRadius = 7;
+            helpIcon.style.borderBottomLeftRadius = helpIcon.style.borderBottomRightRadius = 7;
+            Color iconColor = EditorGUIUtility.isProSkin
+                ? new Color(0.88f, 0.88f, 0.88f) : new Color(0.2f, 0.2f, 0.2f);
+            helpIcon.style.color = iconColor;
+            helpIcon.style.borderTopColor = helpIcon.style.borderBottomColor = iconColor;
+            helpIcon.style.borderLeftColor = helpIcon.style.borderRightColor = iconColor;
+            toggle.Add(helpIcon);
+            toggle.Add(new Label("Controls") { pickingMode = PickingMode.Ignore });
+
+            toggle.clicked += () =>
+            {
+                expanded = !expanded;
+                panel.style.display = expanded ? DisplayStyle.Flex : DisplayStyle.None;
+                toggle.tooltip = expanded ? "Hide canvas controls" : "Show canvas controls";
+            };
+
+            overlay.Add(panel);
+            overlay.Add(toggle);
+            return overlay;
         }
 
         private static void AddNavigationHintRow(VisualElement panel, string action, string control)
@@ -340,11 +397,11 @@ namespace TerraKit.Editor
 
             var asset = CreateInstance<TerraKitGraphAsset>();
             AssetDatabase.CreateAsset(asset, path);
-            AssetDatabase.SaveAssets();
+            AssetDatabase.SaveAssetIfDirty(asset);
             AssetDatabase.Refresh();
 
             _graphAsset = asset;
-            _graphField.value = asset;
+            _graphField.SetValueWithoutNotify(asset);
             LoadGraphIntoView();
             SetStatus(
                 StatusType.Success,
@@ -487,8 +544,7 @@ namespace TerraKit.Editor
                 _graphView.SyncNodeLayoutsToAsset();
             }
 
-            EditorUtility.SetDirty(_graphAsset);
-            AssetDatabase.SaveAssets();
+            TerraKitGraphEditorUtil.MarkDirty(_graphAsset);
             SetSavedAt(DateTime.Now);
             SetStatus(
                 StatusType.Success,
@@ -519,13 +575,7 @@ namespace TerraKit.Editor
             {
                 SetStatus(
                     StatusType.Error,
-                    "Validation failed with " + result.Errors.Count + " error(s).");
-            }
-            else if (result.Warnings.Count > 0)
-            {
-                SetStatus(
-                    StatusType.Warning,
-                    "Validation passed with " + result.Warnings.Count + " warning(s).");
+                    "Validation failed with " + result.ErrorIssues.Count + " error(s).");
             }
             else
             {
@@ -576,11 +626,6 @@ namespace TerraKit.Editor
                 _statusDetails.Add(row);
             }
 
-            foreach (var warning in result.Warnings)
-            {
-                AddStatusDetailLabel("Warning: " + warning);
-            }
-
             if (result.Success)
             {
                 AddValidationSummary(result);
@@ -592,7 +637,7 @@ namespace TerraKit.Editor
                 for (int i = 0; i < result.ExecutionOrder.Count; i++)
                 {
                     AddStatusDetailLabel(
-                        (i + 1) + ". " + result.ExecutionOrder[i].displayName);
+                        (i + 1) + ". " + result.ExecutionOrder[i].DisplayLabel);
                 }
             }
 
@@ -705,7 +750,6 @@ namespace TerraKit.Editor
             AddEdge(noise, "height", mesh, "height");
 
             TerraKitGraphEditorUtil.MarkDirty(_graphAsset);
-            AssetDatabase.SaveAssets();
 
             LoadGraphIntoView();
             ValidateGraph();
@@ -794,7 +838,7 @@ namespace TerraKit.Editor
                 return;
             }
 
-            _inspector.Add(new Label(node.Data.displayName) { name = "InspectorTitle" });
+            _inspector.Add(new Label(node.Data.DisplayLabel) { name = "InspectorTitle" });
 
             var typeLabel = new Label(node.Definition.Category + " / " + node.Definition.TypeId);
             typeLabel.AddToClassList("terrakit-inspector-text");
@@ -1092,32 +1136,33 @@ namespace TerraKit.Editor
             SetStatus(
                 StatusType.Info,
                 "TerraKit — Quick Start",
-                "Build a graph, generate a preview, then save the result.\n\n" +
+                "Build a graph, generate terrain, preview the results, and save or export what you need.\n\n" +
 
-                "1. Check setup: Tools > TerraKit > Check Backend Connection.\n" +
+                "1. Check the backend connection: Tools > TerraKit > Check Backend Connection.\n\n" +
 
-                "2. Click New Graph. Right-click the canvas to add these nodes. " +
-                "Connect each node's right-side output to the next node's left-side input:\n" +
+                "2. Click New Graph. Right-click the canvas to add stages, then connect each output to the next stage's required input.\n\n" +
 
-                "3. Select a node to edit its parameters in the Inspector. Changes will be saved automatically.\n" +
+                "3. Select a node to edit its parameters in the Inspector. Click Save to save the graph, and use Validate to check for missing inputs or invalid settings.\n\n" +
 
-                "4. Click Generator, adjust the settings, then click Generate. " +
-                "Using Validate first is recommended, but optional.\n" +
+                "4. Click Generator. Choose the generation settings, then click Generate Map.\n\n" +
 
-                "5. In Results, use Region and Output to inspect each result. " +
-                "Mesh outputs appear in the Scene.\n" +
+                "5. In Results, use Region and Output to inspect generated resources. HeightField outputs are shown in Data Preview. " +
+                "For Mesh outputs, click Show Map Preview to view the complete map.\n\n" +
 
-                "6. Save Visible Meshes + Prefab keeps the terrain. " +
-                "Export Original Data + Request saves the selected output as JSON.\n\n" +
+                "6. Save Mesh saves all Mesh outputs and materials in the selected Region, with a Region Prefab that preserves material assignments. " +
+                "Save Prefab saves all Regions and their materials as one reusable map Prefab.\n\n" +
 
-                "Region X/Y/Z = location. Regions X/Y/Z = region counts; " +
-                "set all to 1 for a single region.\n" +
+                "7. Export JSON saves the generated data and request settings. " +
+                "Export PNG saves an image of the complete map. Heightmap and Slice Image export the selected grid data as PNG.\n\n" +
 
-                "Cell Width/Height/Depth = cells per region. " +
-                "3D requests need compatible stages.\n" +
+                "Regions X/Y controls the map size in regions. Regions are arranged automatically around the Unity origin; " +
+                "set both to 1 for a single region.\n\n" +
 
-                "Changing the graph/settings or closing Generator clears previews. " +
-                "Saved assets remain."
+                "LOD controls detail level. Cell Width/Height controls the region resolution, and Base Spacing controls the distance between samples.\n\n" +
+
+                "3D mode requires compatible 3D stages. The current built-in HeightField stages are designed for 2D generation.\n\n" +
+
+                "Scene previews are temporary. Save the result if you want to keep it."
             );
         }
 

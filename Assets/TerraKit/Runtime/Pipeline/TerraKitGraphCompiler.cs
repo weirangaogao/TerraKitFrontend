@@ -3,16 +3,14 @@ using System.Linq;
 
 namespace TerraKit
 {
-    /// <summary>
-    /// Validates a graph and produces an execution order using topological sorting.
-    /// This does not execute generation yet; it is the bridge between the visual editor and TerraKit runtime.
-    /// </summary>
+    // Checks graph and calculate the pipeline execution order
     public sealed class TerraKitGraphCompiler
     {
         public TerraKitGraphCompileResult Compile(TerraKitGraphAsset graph)
         {
             var result = new TerraKitGraphCompileResult();
 
+            // Reject invalid graph assets before accessing their contents.
             if (graph == null)
             {
                 result.AddError("No TerraKit graph asset is selected.");
@@ -34,6 +32,7 @@ namespace TerraKit
             {
                 string error;
 
+                // Load the backend metadata required for graph validation.
                 if (!TerraKitNodeRegistry.TryLoadBackend(out error))
                 {
                     result.AddError(
@@ -42,6 +41,7 @@ namespace TerraKit
                 }
             }
 
+            // Validate structural integrity before running dependent checks.
             ValidateGraphShape(graph, result);
 
             if (!result.Success)
@@ -58,6 +58,7 @@ namespace TerraKit
 
         private static void ValidateGraphShape(TerraKitGraphAsset graph, TerraKitGraphCompileResult result)
         {
+            // Track node IDs to enforce uniqueness.
             var nodeIds = new HashSet<string>();
 
             foreach (var node in graph.nodes)
@@ -82,22 +83,23 @@ namespace TerraKit
                 if (node.parameters == null || node.parameters.Any(p => p == null) ||
                     node.parameters.GroupBy(p => p.key).Any(g => g.Count() > 1))
                 {
-                    result.AddError("Node has missing or duplicate parameter entries.", node.id);
+                    result.AddError(node.DisplayLabel + " has missing or duplicate parameter entries.", node.id);
                 }
 
                 ITerraKitNodeDefinition definition;
                 if (!TerraKitNodeRegistry.TryGet(node.typeId, out definition))
                 {
-                    result.AddError("Unknown node type: " + node.typeId + " on node " + node.displayName);
+                    result.AddError("Unknown node type: " + node.typeId + " on node " + node.DisplayLabel, node.id);
                 }
                 else if (node.schemaVersion != definition.SchemaVersion)
                 {
-                    result.AddError(node.displayName + " uses schema v" + node.schemaVersion +
+                    result.AddError(node.DisplayLabel + " uses schema v" + node.schemaVersion +
                         ", but the backend provides v" + definition.SchemaVersion +
                         ". Migrate or recreate this node before generating.", node.id);
                 }
             }
 
+            // Ensure each input port has at most one incoming connection.
             var connectedInputs = new HashSet<string>();
             foreach (var edge in graph.edges)
             {
@@ -109,9 +111,12 @@ namespace TerraKit
 
                 if (!connectedInputs.Add(edge.inputNodeId + "\n" + edge.inputPortId))
                 {
-                    result.AddError("An input port has more than one incoming connection.", edge.inputNodeId);
+                    var target = graph.nodes.FirstOrDefault(n => n != null && n.id == edge.inputNodeId);
+                    result.AddError((target != null ? target.DisplayLabel : edge.inputNodeId) +
+                        " has an input port with more than one incoming connection.", edge.inputNodeId);
                 }
 
+                // Resolve both endpoints before validating the connection.
                 var outputNode = graph.nodes.FirstOrDefault(n => n != null && n.id == edge.outputNodeId);
                 var inputNode = graph.nodes.FirstOrDefault(n => n != null && n.id == edge.inputNodeId);
 
@@ -135,27 +140,28 @@ namespace TerraKit
                     continue;
                 }
 
+                // Verify that the referenced ports exist and use compatible types.
                 var outputPort = outputDefinition.Outputs.FirstOrDefault(p => p.Id == edge.outputPortId);
                 var inputPort = inputDefinition.Inputs.FirstOrDefault(p => p.Id == edge.inputPortId);
 
                 if (outputPort == null)
                 {
-                    result.AddError(outputNode.displayName + " has no output port named " + edge.outputPortId);
+                    result.AddError(outputNode.DisplayLabel + " has no output port named " + edge.outputPortId, outputNode.id);
                     continue;
                 }
 
                 if (inputPort == null)
                 {
-                    result.AddError(inputNode.displayName + " has no input port named " + edge.inputPortId);
+                    result.AddError(inputNode.DisplayLabel + " has no input port named " + edge.inputPortId, inputNode.id);
                     continue;
                 }
 
                 if (!TerraKitNodeRegistry.ArePortTypesCompatible(outputPort.Type, inputPort.Type))
                 {
                     result.AddError(
-                        outputNode.displayName + "." + outputPort.DisplayName +
+                        outputNode.DisplayLabel + "." + outputPort.DisplayName +
                         " (" + outputPort.Type + ") cannot connect to " +
-                        inputNode.displayName + "." + inputPort.DisplayName +
+                        inputNode.DisplayLabel + "." + inputPort.DisplayName +
                         " (" + inputPort.Type + ").");
                 }
             }
@@ -165,6 +171,7 @@ namespace TerraKit
             TerraKitGraphAsset graph,
             TerraKitGraphCompileResult result)
         {
+            // Validate each stored value against its parameter definition.
             foreach (var node in graph.nodes)
             {
                 ITerraKitNodeDefinition definition;
@@ -180,13 +187,12 @@ namespace TerraKit
                     var parameter = node.parameters.FirstOrDefault(
                         item => item.key == parameterDefinition.Key);
 
-                    var issues = TerraKitParameterValidator.Validate(
-                        parameterDefinition, parameter);
+                    var issues = TerraKitParameterValidator.Validate(parameterDefinition, parameter);
 
                     foreach (var issue in issues)
                     {
                         result.AddError(
-                            node.displayName + "." +
+                            node.DisplayLabel + "." +
                             parameterDefinition.DisplayName +
                             ": " + issue.Message,
                             node.id);
@@ -197,6 +203,7 @@ namespace TerraKit
 
         private static void ValidateRequiredInputs(TerraKitGraphAsset graph, TerraKitGraphCompileResult result)
         {
+            // Ensure every required input port is connected.
             foreach (var node in graph.nodes)
             {
                 ITerraKitNodeDefinition definition;
@@ -211,7 +218,7 @@ namespace TerraKit
                     if (!hasConnection)
                     {
                         result.AddError(
-                            node.displayName + " is missing required input: " + input.DisplayName,
+                            node.DisplayLabel + " is missing required input: " + input.DisplayName,
                             node.id);
                     }
                 }
@@ -220,6 +227,7 @@ namespace TerraKit
 
         private static void BuildExecutionOrder(TerraKitGraphAsset graph, TerraKitGraphCompileResult result)
         {
+            // Build the lookup tables required for topological sorting.
             var nodesById = graph.nodes.ToDictionary(n => n.id, n => n);
             var incomingCount = graph.nodes.ToDictionary(n => n.id, n => 0);
             var outgoing = graph.nodes.ToDictionary(n => n.id, n => new List<string>());
@@ -235,6 +243,7 @@ namespace TerraKit
                 outgoing[edge.outputNodeId].Add(edge.inputNodeId);
             }
 
+            // Begin with nodes that have no unresolved dependencies.
             var ready = new Queue<string>(incomingCount.Where(pair => pair.Value == 0).Select(pair => pair.Key));
             var sortedIds = new List<string>();
 
@@ -243,6 +252,7 @@ namespace TerraKit
                 string id = ready.Dequeue();
                 sortedIds.Add(id);
 
+                // Release downstream nodes as their dependencies are resolved.
                 foreach (string next in outgoing[id])
                 {
                     incomingCount[next]--;
@@ -253,6 +263,7 @@ namespace TerraKit
                 }
             }
 
+            // A partial sort indicates that the graph contains a cycle.
             if (sortedIds.Count != graph.nodes.Count)
             {
                 result.AddError("Graph contains a cycle. TerraKit pipelines must be acyclic dataflow graphs.");

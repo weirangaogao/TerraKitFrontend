@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
+// Defines data structures used to represent the graph
+
 namespace TerraKit
 {
     [Serializable]
@@ -14,6 +16,17 @@ namespace TerraKit
         public Vector2 position;
         public Vector2 size;
         public List<TerraKitParameterData> parameters = new List<TerraKitParameterData>();
+
+        // Creates a readable label using the node name and part of its ID.
+        public string DisplayLabel
+        {
+            get
+            {
+                string name = string.IsNullOrEmpty(displayName) ? typeId : displayName;
+                return string.IsNullOrEmpty(id) ? name :
+                    name + " [" + id.Substring(0, Math.Min(8, id.Length)) + "]";
+            }
+        }
     }
 
     [Serializable]

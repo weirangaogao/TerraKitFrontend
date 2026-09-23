@@ -25,10 +25,10 @@ namespace TerraKit
                     return "true or false";
 
                 case TerraKitBackendParameterKind.Vector2Float64:
-                    return "2 comma-separated finite numbers, e.g. (0, 1)";
+                    return "2 comma-separated finite numbers, e.g. 0, 1";
 
                 case TerraKitBackendParameterKind.Vector3Float64:
-                    return "3 comma-separated finite numbers, e.g. (0, 1, 0)";
+                    return "3 comma-separated finite numbers, e.g. 0, 1, 0";
 
                 case TerraKitBackendParameterKind.String:
                     return "Text";

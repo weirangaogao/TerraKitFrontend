@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 
 namespace TerraKit
 {
@@ -7,7 +8,7 @@ namespace TerraKit
         public TerraKitGraphCompileResult Result { get; }
 
         public TerraKitGraphValidationException(TerraKitGraphCompileResult result)
-            : base("The graph is not ready for backend generation:\n" + string.Join("\n", result.Errors))
+            : base("The graph is not ready for backend generation:\n" + string.Join("\n", result.ErrorIssues.Select(issue => issue.Message)))
         {
             Result = result;
         }
@@ -29,18 +30,14 @@ namespace TerraKit
     {
         public bool Success
         {
-            get { return Errors.Count == 0; }
+            get { return ErrorIssues.Count == 0; }
         }
 
-        public readonly List<string> Errors = new List<string>();
-        public readonly List<TerraKitGraphCompileIssue> ErrorIssues =
-            new List<TerraKitGraphCompileIssue>();
-        public readonly List<string> Warnings = new List<string>();
+        public readonly List<TerraKitGraphCompileIssue> ErrorIssues = new List<TerraKitGraphCompileIssue>();
         public readonly List<TerraKitNodeData> ExecutionOrder = new List<TerraKitNodeData>();
 
         public void AddError(string message, string nodeId = null)
         {
-            Errors.Add(message);
             ErrorIssues.Add(new TerraKitGraphCompileIssue(message, nodeId));
         }
     }

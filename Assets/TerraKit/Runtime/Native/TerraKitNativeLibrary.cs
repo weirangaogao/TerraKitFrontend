@@ -3,10 +3,8 @@ using System.Runtime.InteropServices;
 
 namespace TerraKit
 {
-    /// <summary>
-    /// Performs a small, non-destructive health check against the TerraKit native library.
-    /// The rest of the graph runtime can use this before creating registries or pipelines.
-    /// </summary>
+    // Checks the connection between the Unity C# frontend and the Rust backend.
+    // Uses P/Invoke to load the native TerraKit library and verify its version.
     public static class TerraKitNativeLibrary
     {
         public const uint SupportedAbiMajor = 0;

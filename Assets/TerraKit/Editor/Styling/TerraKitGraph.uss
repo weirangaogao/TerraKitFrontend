@@ -565,13 +565,3 @@
 .terrakit-node-mesh > #node-border {
     border-top-color: #d6c55e;
 }
-
-.terrakit-parameter-summary {
-    white-space: normal;
-    font-size: 11px;
-    color: #cfd6e2;
-    margin-top: 6px;
-    margin-left: 4px;
-    margin-right: 4px;
-    margin-bottom: 6px;
-}

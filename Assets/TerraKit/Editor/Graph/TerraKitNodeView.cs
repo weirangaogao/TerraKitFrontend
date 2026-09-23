@@ -10,7 +10,6 @@ namespace TerraKit.Editor
 {
     internal sealed class TerraKitNodeView : Node
     {
-        private static readonly Vector2 DefaultSize = new Vector2(260, 180);
         private static readonly Vector2 MinimumSize = new Vector2(220, 120);
 
         private readonly Dictionary<string, Port> _inputPorts = new Dictionary<string, Port>();
@@ -32,7 +31,9 @@ namespace TerraKit.Editor
             Definition = definition;
 
             viewDataKey = data.id;
-            title = data.displayName;
+            title = data.DisplayLabel;
+            expanded = true;
+            titleButtonContainer.RemoveFromHierarchy();
 
             capabilities |= Capabilities.Movable |
                             Capabilities.Selectable |
@@ -75,14 +76,12 @@ namespace TerraKit.Editor
 
             BuildParameterSummary();
 
-            var initialSize = data.size.x >= MinimumSize.x && data.size.y >= MinimumSize.y
-                ? data.size
-                : DefaultSize;
-
-            // GraphView's Node.SetPosition only applies left/top. Width and height must be set explicitly.
-            style.width = initialSize.x;
-            style.height = initialSize.y;
-            SetPosition(new Rect(data.position, initialSize));
+            bool hasSavedSize = data.size.x >= MinimumSize.x && data.size.y >= MinimumSize.y;
+            style.width = hasSavedSize ? data.size.x : CalculateInitialWidth();
+            style.height = hasSavedSize ? new StyleLength(data.size.y) : StyleKeyword.Auto;
+            style.overflow = Overflow.Hidden;
+            SetPosition(new Rect(data.position, data.size));
+            if (!hasSavedSize) RegisterCallback<GeometryChangedEvent>(CaptureInitialSize);
 
             var resizer = new Resizer(MinimumSize, OnResized);
             resizer.AddToClassList("terrakit-node-resizer");
@@ -90,6 +89,7 @@ namespace TerraKit.Editor
 
             RefreshExpandedState();
             RefreshPorts();
+            ConfigureContentLayout();
         }
 
         public Port GetInputPort(string portId)
@@ -112,7 +112,6 @@ namespace TerraKit.Editor
                 if (_parameterValueLabels.TryGetValue(parameter.key, out valueLabel))
                 {
                     valueLabel.text = parameter.value;
-                    valueLabel.tooltip = parameter.value;
                 }
             }
         }
@@ -182,21 +181,67 @@ namespace TerraKit.Editor
 
                 var row = new VisualElement();
                 row.AddToClassList("terrakit-node-parameter-row");
+                row.style.flexShrink = 0;
 
                 var nameLabel = new Label(parameter.displayName);
                 nameLabel.AddToClassList("terrakit-node-parameter-name");
+                nameLabel.style.whiteSpace = WhiteSpace.Normal;
 
                 var valueLabel = new Label(parameter.value);
                 valueLabel.AddToClassList("terrakit-node-parameter-value");
-                valueLabel.tooltip = parameter.value;
+                valueLabel.style.flexBasis = 0;
+                valueLabel.style.whiteSpace = WhiteSpace.Normal;
+                valueLabel.style.textOverflow = TextOverflow.Clip;
 
                 row.Add(nameLabel);
                 row.Add(valueLabel);
                 extensionContainer.Add(row);
                 _parameterValueLabels[parameter.key] = valueLabel;
             }
+        }
 
-            RefreshParameterSummary();
+        private void ConfigureContentLayout()
+        {
+            // Keep rows readable; manually smaller nodes clip content without growing back.
+            for (var element = extensionContainer; element != null && element != this; element = element.parent)
+                element.style.flexShrink = 0;
+            titleContainer.style.flexShrink = 0;
+            topContainer.style.flexShrink = 0;
+
+            var titleLabel = titleContainer.Q<Label>("title-label");
+            if (titleLabel != null)
+            {
+                titleLabel.style.minWidth = 0;
+                titleLabel.style.whiteSpace = WhiteSpace.Normal;
+                titleLabel.tooltip = title;
+            }
+        }
+
+        private float CalculateInitialWidth()
+        {
+            var textStyle = new GUIStyle(EditorStyles.label) { fontSize = 10 };
+            var valueStyle = new GUIStyle(textStyle) { fontStyle = FontStyle.Bold };
+            var titleStyle = new GUIStyle(EditorStyles.boldLabel) { fontSize = 12 };
+            float width = Mathf.Max(260, titleStyle.CalcSize(new GUIContent(title)).x +
+                textStyle.CalcSize(new GUIContent(Definition.Category.ToUpperInvariant())).x + 64);
+            foreach (var parameter in Data.parameters)
+            {
+                width = Mathf.Max(width, 24 + (textStyle.CalcSize(new GUIContent(parameter.displayName)).x + 8) / 0.55f);
+                width = Mathf.Max(width, 24 + (valueStyle.CalcSize(new GUIContent(parameter.value)).x + 8) / 0.45f);
+            }
+            return Mathf.Ceil(width);
+        }
+
+        private void CaptureInitialSize(GeometryChangedEvent evt)
+        {
+            if (!float.IsFinite(layout.width) || !float.IsFinite(layout.height) ||
+                layout.width < MinimumSize.x || layout.height < MinimumSize.y) return;
+
+            // Resolve automatic height once, then persist a freely resizable node size.
+            UnregisterCallback<GeometryChangedEvent>(CaptureInitialSize);
+            Data.size = layout.size;
+            style.height = layout.height;
+            Resized?.Invoke();
         }
 
         private void OnResized()

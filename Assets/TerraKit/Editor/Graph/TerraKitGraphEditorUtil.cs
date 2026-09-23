@@ -15,8 +15,7 @@ namespace TerraKit.Editor
                 typeId = definition.TypeId,
                 schemaVersion = definition.SchemaVersion,
                 displayName = definition.DisplayName,
-                position = position,
-                size = new Vector2(260, 180)
+                position = position
             };
 
             EnsureParameterDefaults(data, definition);
@@ -71,7 +70,7 @@ namespace TerraKit.Editor
             }
 
             EditorUtility.SetDirty(target);
-            AssetDatabase.SaveAssets();
+            AssetDatabase.SaveAssetIfDirty(target);
         }
     }
 }

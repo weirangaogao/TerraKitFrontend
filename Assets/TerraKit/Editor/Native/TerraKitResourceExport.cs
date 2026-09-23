@@ -1,7 +1,5 @@
 using System;
-using System.IO;
 using System.Globalization;
-using UnityEditor;
 using UnityEngine;
 using UnityEngine.Rendering;
 
@@ -54,34 +52,21 @@ namespace TerraKit.Editor
         internal static Mesh CreateMesh(TerraKitGeneratedMeshData source)
         {
             var mesh = new Mesh { name = "TerraKit Generated Mesh" };
-            if (source.Positions.Length > ushort.MaxValue) mesh.indexFormat = IndexFormat.UInt32;
-            mesh.vertices = source.Positions; mesh.triangles = source.Indices;
-            if (source.Normals.Length == source.Positions.Length) mesh.normals = source.Normals;
-            else mesh.RecalculateNormals();
-            if (source.Texcoords.Length == source.Positions.Length) mesh.uv = source.Texcoords;
-            mesh.RecalculateBounds();
-            return mesh;
-        }
-
-        internal static void SaveMesh(TerraKitGeneratedMeshData source, string suggestedName)
-        {
-            string path = EditorUtility.SaveFilePanelInProject("Save Selected Mesh", suggestedName, "asset", "Save the selected output.");
-            if (string.IsNullOrEmpty(path)) return;
-            var existing = AssetDatabase.LoadMainAssetAtPath(path);
-            if (existing != null && !(existing is Mesh)) throw new InvalidOperationException("This path contains a non-Mesh asset.");
-            var mesh = CreateMesh(source);
             try
             {
-                mesh.name = Path.GetFileNameWithoutExtension(path);
-                if (existing != null)
-                {
-                    EditorUtility.CopySerialized(mesh, existing);
-                    EditorUtility.SetDirty(existing);
-                }
-                else { AssetDatabase.CreateAsset(mesh, path); mesh = null; }
-                AssetDatabase.SaveAssets();
+                if (source.Positions.Length > ushort.MaxValue) mesh.indexFormat = IndexFormat.UInt32;
+                mesh.vertices = source.Positions; mesh.triangles = source.Indices;
+                if (source.Normals.Length == source.Positions.Length) mesh.normals = source.Normals;
+                else mesh.RecalculateNormals();
+                if (source.Texcoords.Length == source.Positions.Length) mesh.uv = source.Texcoords;
+                mesh.RecalculateBounds();
+                return mesh;
             }
-            finally { if (mesh != null) UnityEngine.Object.DestroyImmediate(mesh); }
+            catch
+            {
+                UnityEngine.Object.DestroyImmediate(mesh);
+                throw;
+            }
         }
 
         internal static void Range(TerraKitGridData grid, out float minimum, out float maximum)
@@ -98,9 +83,31 @@ namespace TerraKit.Editor
         {
             // Preview is bounded; exported JSON always retains every original sample.
             int width = Math.Min(grid.Width, 512), height = Math.Min(grid.Height, 512);
-            var texture = new Texture2D(width, height, TextureFormat.RGBA32, false)
-            { hideFlags = HideFlags.HideAndDontSave, filterMode = FilterMode.Point };
-            var colors = new Color32[width * height];
+            return CreateGridImage(grid, slice, minimum, maximum, width, height);
+        }
+
+        internal static Texture2D GridImage(TerraKitGridData grid, int slice, float minimum, float maximum)
+        {
+            if (grid == null) throw new ArgumentNullException(nameof(grid));
+            if (grid.Width > SystemInfo.maxTextureSize || grid.Height > SystemInfo.maxTextureSize)
+                throw new InvalidOperationException("The grid exceeds this device's maximum PNG texture dimensions.");
+
+            // Keep one pixel per sample and use the same colors and orientation as the preview.
+            return CreateGridImage(grid, slice, minimum, maximum, grid.Width, grid.Height);
+        }
+
+        private static Texture2D CreateGridImage(TerraKitGridData grid, int slice,
+            float minimum, float maximum, int width, int height)
+        {
+            if (grid.Width <= 0 || grid.Height <= 0 || grid.Depth <= 0 || width <= 0 || height <= 0)
+                throw new ArgumentException("Grid dimensions must be positive.", nameof(grid));
+            if (slice < 0 || slice >= grid.Depth) throw new ArgumentOutOfRangeException(nameof(slice));
+            long count = (long)grid.Width * grid.Height * grid.Depth;
+            if (count > int.MaxValue || (grid.VoxelIds != null
+                ? grid.VoxelIds.LongLength != count : grid.Values == null || grid.Values.LongLength != count))
+                throw new ArgumentException("Grid sample count does not match its dimensions.", nameof(grid));
+
+            var colors = new Color32[checked(width * height)];
             for (int y = 0; y < height; y++)
                 for (int x = 0; x < width; x++)
                 {
@@ -122,7 +129,19 @@ namespace TerraKit.Editor
                     }
                     colors[x + width * y] = color;
                 }
-            texture.SetPixels32(colors); texture.Apply(); return texture;
+            var texture = new Texture2D(width, height, TextureFormat.RGBA32, false)
+            { hideFlags = HideFlags.HideAndDontSave, filterMode = FilterMode.Point };
+            try
+            {
+                texture.SetPixels32(colors);
+                texture.Apply();
+                return texture;
+            }
+            catch
+            {
+                UnityEngine.Object.DestroyImmediate(texture);
+                throw;
+            }
         }
     }
 }

@@ -32,7 +32,7 @@ namespace TerraKit.Editor
             if (!TerraKitNodeRegistry.TryLoadBackend(out backendError))
             {
                 tree.Add(new SearchTreeEntry(new GUIContent(
-                    "Backend unavailable — fix the connection and restart Unity",
+                    "Backend unavailable",
                     backendError))
                 {
                     level = 1
@@ -81,13 +81,8 @@ namespace TerraKit.Editor
         {
             foreach (var definition in definitions)
             {
-                string summary = definition.Description;
-                string label = string.IsNullOrWhiteSpace(summary)
-                    ? definition.DisplayName
-                    : definition.DisplayName + " — " + summary;
-
                 tree.Add(new SearchTreeEntry(
-                    new GUIContent(label, definition.Description))
+                    new GUIContent(definition.DisplayName))
                 {
                     level = level,
                     userData = definition

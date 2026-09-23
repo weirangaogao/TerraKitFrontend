@@ -130,14 +130,12 @@ namespace TerraKit
                 case TerraKitBackendParameterKind.Float64:
                     return Float64Value.ToString("R", CultureInfo.InvariantCulture);
                 case TerraKitBackendParameterKind.Vector2Float64:
-                    return "(" +
-                           VectorX.ToString("R", CultureInfo.InvariantCulture) + ", " +
-                           VectorY.ToString("R", CultureInfo.InvariantCulture) + ")";
+                    return VectorX.ToString("R", CultureInfo.InvariantCulture) + ", " +
+                           VectorY.ToString("R", CultureInfo.InvariantCulture);
                 case TerraKitBackendParameterKind.Vector3Float64:
-                    return "(" +
-                           VectorX.ToString("R", CultureInfo.InvariantCulture) + ", " +
+                    return VectorX.ToString("R", CultureInfo.InvariantCulture) + ", " +
                            VectorY.ToString("R", CultureInfo.InvariantCulture) + ", " +
-                           VectorZ.ToString("R", CultureInfo.InvariantCulture) + ")";
+                           VectorZ.ToString("R", CultureInfo.InvariantCulture);
                 case TerraKitBackendParameterKind.String:
                 case TerraKitBackendParameterKind.Enum:
                     return TextValue;
@@ -214,6 +212,9 @@ namespace TerraKit
             Parameters = parameters;
         }
     }
+
+    // Reads stage information from the Rust backend,
+    // including inputs, outputs, and parameters.
 
     public static class TerraKitBackendSchemaDiscovery
     {

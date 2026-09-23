@@ -12,6 +12,8 @@ namespace TerraKit.Editor
     {
         private const string ClipboardPrefix = "TERRAKIT_NODES_V1:";
         private static readonly Vector2 DuplicateOffset = new Vector2(30, 30);
+        private static readonly Vector2 NodeSearchSize = new Vector2(280, 180);
+        private readonly EditorWindow _ownerWindow;
 
         [Serializable]
         private sealed class NodeClipboardPayload
@@ -27,8 +29,9 @@ namespace TerraKit.Editor
         public event Action<TerraKitNodeView> NodeSelected;
         public event Action GraphChanged;
 
-        public TerraKitGraphView()
+        public TerraKitGraphView(EditorWindow ownerWindow)
         {
+            _ownerWindow = ownerWindow;
             AddToClassList("terrakit-graph-view");
             focusable = true;
 
@@ -174,7 +177,9 @@ namespace TerraKit.Editor
             // at the menu item instead of the place where the user right-clicked.
             var panelMousePosition = evt.mousePosition;
             var graphPosition = contentViewContainer.WorldToLocal(panelMousePosition);
-            var screenPosition = GUIUtility.GUIToScreenPoint(panelMousePosition);
+            // UI Toolkit reports panel coordinates; IMGUI's current origin is not reliable here.
+            var windowMousePosition = _ownerWindow.rootVisualElement.WorldToLocal(panelMousePosition);
+            var screenPosition = _ownerWindow.position.position + windowMousePosition;
 
             evt.menu.AppendAction(
                 "Create Node...",
@@ -187,12 +192,21 @@ namespace TerraKit.Editor
                     }
 
                     _nodeSearchProvider.Initialize(this, graphPosition);
-                    SearchWindow.Open(
+                    bool opened = SearchWindow.Open(
                         new SearchWindowContext(
                             screenPosition,
-                            requestedWidth: 520,
-                            requestedHeight: 360),
+                            requestedWidth: NodeSearchSize.x,
+                            requestedHeight: NodeSearchSize.y),
                         _nodeSearchProvider);
+                    if (!opened) return;
+
+                    var searchWindow = Resources.FindObjectsOfTypeAll<SearchWindow>().FirstOrDefault();
+                    if (searchWindow == null) return;
+
+                    // Override SearchWindow's minimum height and centered anchor after initialization.
+                    searchWindow.minSize = NodeSearchSize;
+                    searchWindow.maxSize = NodeSearchSize;
+                    searchWindow.ShowAsDropDown(new Rect(screenPosition, Vector2.one), NodeSearchSize);
                 });
         }
 

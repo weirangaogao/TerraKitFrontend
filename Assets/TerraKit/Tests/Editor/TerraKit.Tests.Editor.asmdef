@@ -1,6 +1,0 @@
-{
-  "name": "TerraKit.Tests.Editor",
-  "references": ["TerraKit.Runtime", "TerraKit.Editor"],
-  "includePlatforms": ["Editor"],
-  "optionalUnityReferences": ["TestAssemblies"]
-}
