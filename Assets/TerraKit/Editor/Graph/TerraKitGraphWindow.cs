@@ -374,8 +374,13 @@ namespace TerraKit.Editor
 
         private void LoadStylesheet()
         {
-            var stylePath = "Assets/TerraKit/Editor/Styling/TerraKitGraph.uss";
-            var stylesheet = AssetDatabase.LoadAssetAtPath<StyleSheet>(stylePath);
+            // Resolve by GUID rather than a project-relative path so this works both as an embedded/local UPM package and when the source lives under Assets/.
+            const string styleGuid = "c25911b1c96c042d99eecbaaa360179a";
+            var stylePath = AssetDatabase.GUIDToAssetPath(styleGuid);
+            var stylesheet = string.IsNullOrEmpty(stylePath)
+                ? null
+                : AssetDatabase.LoadAssetAtPath<StyleSheet>(stylePath);
+
             if (stylesheet != null)
             {
                 rootVisualElement.styleSheets.Add(stylesheet);
